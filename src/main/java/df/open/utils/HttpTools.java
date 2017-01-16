@@ -35,6 +35,8 @@ public class HttpTools {
         FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
         res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
         HttpUtil.setContentLength(res, content.readableBytes());
+        System.out.println("###################");
+        System.out.println(res);
         execute(ctx, req, res);
     }
 

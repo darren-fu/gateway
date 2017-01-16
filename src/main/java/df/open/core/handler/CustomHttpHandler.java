@@ -1,6 +1,7 @@
 package df.open.core.handler;
 
 import df.open.core.NettyServer;
+import df.open.core.remote.Requester;
 import df.open.utils.HttpTools;
 import df.open.utils.RespTools;
 import df.open.utils.StringTools;
@@ -42,7 +43,8 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
             logger.error("decoderResult: {}",httpRequest.decoderResult());
             logger.error("protocolVersion: {}",httpRequest.protocolVersion());
 
-            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
+//            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
+            Requester.requestRemote(ctx, httpRequest);
           //  handleHttpRequest(ctx, (FullHttpRequest) msg);
         } else if (msg instanceof WebSocketFrame) {//如果是Websocket请求，则进行websocket操作
            // handleWebSocketFrame(ctx, (WebSocketFrame) msg);

@@ -1,5 +1,6 @@
 package df.open.core.config;
 
+import df.open.core.encoder.HttpClientResponseEncoder;
 import df.open.core.handler.CustomHttpHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -10,7 +11,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -60,8 +60,12 @@ public class ServerConfiguration {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast("respDecoder-reqEncoder", new HttpServerCodec())
+                        ch.pipeline()
+                                .addLast("decoder", new HttpRequestDecoder())
+//                                .addLast("respDecoder-reqEncoder", new HttpServerCodec())
                                 .addLast("http-aggregator", new HttpObjectAggregator(65536))
+                                .addLast("encoder", new HttpClientResponseEncoder<>())
+                                .addLast("base-encoder", new HttpResponseEncoder())
                                 .addLast(new ChunkedWriteHandler())
                                 .addLast("action-handler", customHttpHandler);
 
