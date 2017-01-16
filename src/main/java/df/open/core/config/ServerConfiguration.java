@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.EventExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,7 @@ import java.util.Set;
 @Configuration
 public class ServerConfiguration {
     int bossCount = 1;
-    int workerCount = 1;
+    int workerCount = 2;
     boolean keepAlive = true;
 
     @Autowired
@@ -55,6 +56,9 @@ public class ServerConfiguration {
     @Bean
     public ServerBootstrap serverBootstrap() {
         ServerBootstrap b = new ServerBootstrap();
+
+        EventExecutor executor ;//= new
+
         b.group(bossGroup(), workerGroup())
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -81,6 +85,7 @@ public class ServerConfiguration {
         for (ChannelOption option : keySet) {
             b.option(option, channelOptions.get(option));
         }
+
         return b;
     }
 }

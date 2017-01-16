@@ -33,10 +33,10 @@ public class HttpTools {
             return;
         }
         FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
-        res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
+//        res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
         HttpUtil.setContentLength(res, content.readableBytes());
-        System.out.println("###################");
-        System.out.println(res);
+        //System.out.println("###################");
+        //System.out.println(res);
         execute(ctx, req, res);
     }
 
@@ -49,40 +49,43 @@ public class HttpTools {
         buf.release();
     }
 
-   public static String getIp(HttpRequest request){
-       HttpHeaders headers=request.headers();
-       String[] ips=proxyIP(headers);
-       if(ips.length>0&&ips[0]!=""){
-           return ips[0].split(":")[0];
-       }
-       CharSequence realIPChar=headers.get("X-Real-IP");
-       if (realIPChar!=null){
-           String[] realIP=realIPChar.toString().split(":");
-           if(realIP.length>0){
-               if (realIP[0]!="["){
-                   return realIP[0];
-               }
-           }
-       }
-       return "127.0.0.1";
-   }
+    public static String getIp(HttpRequest request) {
+        HttpHeaders headers = request.headers();
+        String[] ips = proxyIP(headers);
+        if (ips.length > 0 && ips[0] != "") {
+            return ips[0].split(":")[0];
+        }
+        CharSequence realIPChar = headers.get("X-Real-IP");
+        if (realIPChar != null) {
+            String[] realIP = realIPChar.toString().split(":");
+            if (realIP.length > 0) {
+                if (realIP[0] != "[") {
+                    return realIP[0];
+                }
+            }
+        }
+        return "127.0.0.1";
+    }
 
-    private static String[] proxyIP(HttpHeaders headers){
-        CharSequence ip=headers.get("X-Forwarded-For");
-        if (ip==null){
+    private static String[] proxyIP(HttpHeaders headers) {
+        CharSequence ip = headers.get("X-Forwarded-For");
+        if (ip == null) {
             return new String[]{};
         }
         return ip.toString().split(",");
     }
+
     private static void execute(
             ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
         if (HttpUtil.isKeepAlive(req)) {
             res.headers().set(CONNECTION, KEEP_ALIVE);
             ctx.write(res);
-            ctx.flush();
+            ctx.close();
         } else {
-            ctx.write(res);
-            ctx.flush();
+           // System.out.println("not keep alive ################");
+
+//            ctx.write(res);
+//            ctx.flush();
             ctx.channel().writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
         }
     }

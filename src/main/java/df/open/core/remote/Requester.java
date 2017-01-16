@@ -34,7 +34,7 @@ public class Requester {
 
     private static void execute(
             ChannelHandlerContext ctx, FullHttpRequest req, HttpResponse res) {
-        if (HttpUtil.isKeepAlive(req)) {
+        if (!HttpUtil.isKeepAlive(req)) {
             System.out.println("isKeepAlive###");
             res.addHeader("Connection", "keep-alive");
             ctx.write(res);

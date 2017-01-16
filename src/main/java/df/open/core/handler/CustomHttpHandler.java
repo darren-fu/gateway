@@ -27,7 +27,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 
     private String mac;
 
-
+    private static int count = 0;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -35,75 +35,35 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 
             FullHttpRequest httpRequest = (FullHttpRequest) msg;
 
-            logger.error("httpRequest: {}",httpRequest.toString());
-            logger.error("uri: {}",httpRequest.uri());
-            logger.error("content: {}",httpRequest.content().toString());
-            logger.error("headers: {}",httpRequest.headers().toString());
-            logger.error("method: {}",httpRequest.method().toString());
-            logger.error("decoderResult: {}",httpRequest.decoderResult());
-            logger.error("protocolVersion: {}",httpRequest.protocolVersion());
+//            logger.error("httpRequest: {}", httpRequest.toString());
+            //logger.error("uri: {}", httpRequest.uri());
+//            logger.error("content: {}", httpRequest.content().toString());
+//            logger.error("headers: {}", httpRequest.headers().toString());
+//            logger.error("method: {}", httpRequest.method().toString());
+//            logger.error("decoderResult: {}", httpRequest.decoderResult());
+//            logger.error("protocolVersion: {}", httpRequest.protocolVersion());
 
-//            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
-            Requester.requestRemote(ctx, httpRequest);
-          //  handleHttpRequest(ctx, (FullHttpRequest) msg);
+            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
+//            Requester.requestRemote(ctx, httpRequest);
+            //  handleHttpRequest(ctx, (FullHttpRequest) msg);
         } else if (msg instanceof WebSocketFrame) {//如果是Websocket请求，则进行websocket操作
-           // handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+            // handleWebSocketFrame(ctx, (WebSocketFrame) msg);
         }
+
+//        ctx.fireChannelRead(msg);
     }
 
-
-    public void messageReceived(ChannelHandlerContext ctx, Object msg) {
-
-    }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
-        System.out.println("##channelReadComplete...");
+
+        System.out.println("##channelReadComplete..." + count++ + ",ctx:" + ctx.hashCode());
         ctx.flush();
-        ctx.fireChannelReadComplete();
+//        ctx.close();
+        //ctx.fireChannelReadComplete();
 
     }
 
-    //处理HTTP的代码
-    private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
-        logger.warn("uri:" + req.uri());
-        if (req.uri().startsWith("/ws/join")) {//如果urL开头为/ws/join则升级为websocket
-            mac = wsBeforeHandler(ctx, req);
-            if (mac == null || mac.length() < 1) {
-                RespTools.paraErrorBack(ctx, req, null);
-                return;
-            }
-            WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-                    getWebSocketLocation(req), null, true);
-            handshaker = wsFactory.newHandshaker(req);
-            if (handshaker == null) {
-                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
-            } else {
-                handshaker.handshake(ctx.channel(), req);
-            }
-        } else {
-//            RouteResult<Action> routeResult = rs.getRouter().route(req.method(), req.uri());
-//            Action action = routeResult.target();
-//            action.act(ctx, req);
-        }
-    }
-
-    private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
-
-        // Check for closing frame
-        if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-            return;
-        }
-        if (frame instanceof PingWebSocketFrame) {
-            ctx.write(new PongWebSocketFrame(frame.content().retain()));
-            return;
-        }
-        if (frame instanceof TextWebSocketFrame) {
-            String json = ((TextWebSocketFrame) frame).text();
-            return;
-        }
-    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
