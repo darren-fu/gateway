@@ -32,7 +32,7 @@ import static io.netty.util.AsciiString.c2b;
 public class HttpClientResponseEncoder<R extends HttpResponse> extends MessageToMessageEncoder<Object> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, List<Object> out) throws Exception {
-        System.out.println("HttpRemoteResponseEncoder encode:" + msg);
+//        System.out.println("HttpRemoteResponseEncoder encode:" + msg);
         ByteBuf buf = null;
         buf = ctx.alloc().buffer();
 
@@ -42,8 +42,6 @@ public class HttpClientResponseEncoder<R extends HttpResponse> extends MessageTo
         encodeHeaderLine(response,buf);
 
 
-        response.getEntity().getContent();
-
         buf.writeBytes(EntityUtils.toByteArray(response.getEntity()));
         out.add(buf);
     }
@@ -51,6 +49,7 @@ public class HttpClientResponseEncoder<R extends HttpResponse> extends MessageTo
     @Override
     public boolean acceptOutboundMessage(Object msg) throws Exception {
         return msg instanceof HttpResponse;
+//        return false;
     }
 
     static void encodeAscii0(CharSequence seq, ByteBuf buf) {

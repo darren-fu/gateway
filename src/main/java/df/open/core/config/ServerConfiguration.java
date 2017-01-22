@@ -3,6 +3,7 @@ package df.open.core.config;
 import df.open.core.encoder.HttpClientResponseEncoder;
 import df.open.core.handler.CustomHttpHandler;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -12,6 +13,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.EventExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -57,7 +59,7 @@ public class ServerConfiguration {
     public ServerBootstrap serverBootstrap() {
         ServerBootstrap b = new ServerBootstrap();
 
-        EventExecutor executor ;//= new
+        EventExecutor executor = new DefaultEventExecutor();
 
         b.group(bossGroup(), workerGroup())
                 .channel(NioServerSocketChannel.class)
@@ -71,7 +73,7 @@ public class ServerConfiguration {
                                 .addLast("encoder", new HttpClientResponseEncoder<>())
                                 .addLast("base-encoder", new HttpResponseEncoder())
                                 .addLast(new ChunkedWriteHandler())
-                                .addLast("action-handler", customHttpHandler);
+                                .addLast(executor, "action-handler", customHttpHandler);
 
 //
 //                        ch.pipeline().addLast("decoder", new HttpRequestDecoder());
@@ -85,6 +87,9 @@ public class ServerConfiguration {
         for (ChannelOption option : keySet) {
             b.option(option, channelOptions.get(option));
         }
+        b.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);//关键是这句
+
 
         return b;
     }

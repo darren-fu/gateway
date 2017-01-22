@@ -78,11 +78,13 @@ public class HttpTools {
     private static void execute(
             ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
         if (HttpUtil.isKeepAlive(req)) {
+            System.out.println("is keep alive ############");
+
             res.headers().set(CONNECTION, KEEP_ALIVE);
             ctx.write(res);
             ctx.close();
         } else {
-           // System.out.println("not keep alive ################");
+            System.out.println("not keep alive ################");
 
 //            ctx.write(res);
 //            ctx.flush();

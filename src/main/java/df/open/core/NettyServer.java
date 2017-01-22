@@ -23,7 +23,7 @@ public class NettyServer {
     @Autowired
     private ServerBootstrap serverBootstrap;
 
-    int port = 9000;
+    int port = 9100;
 
 
     @PostConstruct

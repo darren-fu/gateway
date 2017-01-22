@@ -1,7 +1,9 @@
 package df.open.core.handler;
 
 import df.open.core.NettyServer;
+import df.open.core.executor.ExecutorContext;
 import df.open.core.remote.Requester;
+import df.open.http.AsyHttpClient;
 import df.open.utils.HttpTools;
 import df.open.utils.RespTools;
 import df.open.utils.StringTools;
@@ -29,6 +31,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 
     private static int count = 0;
 
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest) {//如果是HTTP请求，进行HTTP操作
@@ -42,10 +45,28 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 //            logger.error("method: {}", httpRequest.method().toString());
 //            logger.error("decoderResult: {}", httpRequest.decoderResult());
 //            logger.error("protocolVersion: {}", httpRequest.protocolVersion());
+            long now = System.currentTimeMillis();
+//            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
 
-            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
-//            Requester.requestRemote(ctx, httpRequest);
-            //  handleHttpRequest(ctx, (FullHttpRequest) msg);
+//            ExecutorContext.execute(new Runnable() {
+//                @Override
+//                public void run() {
+//                    long thread_start = System.currentTimeMillis();
+//
+//                    Requester.requestRemote(ctx, httpRequest);
+//                    long thread_end = System.currentTimeMillis();
+//
+//                    System.out.println("thread_end- thread_start : " + (thread_end - thread_start) +
+//                            " :  thread_end - start : " + (thread_end - now) + " ms");
+//
+//                }
+//            });
+
+            AsyHttpClient.request(ctx, httpRequest);
+
+
+            long end = System.currentTimeMillis();
+            System.out.println("end - now : " + (end - now) + " ms");
         } else if (msg instanceof WebSocketFrame) {//如果是Websocket请求，则进行websocket操作
             // handleWebSocketFrame(ctx, (WebSocketFrame) msg);
         }

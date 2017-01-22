@@ -25,24 +25,23 @@ public class Requester {
 
 
     public static void requestRemote(ChannelHandlerContext ctx, FullHttpRequest originRequest) {
-        System.out.println("#@!#@!#@#!@# requestRemote");
         HttpResponse response = HttpClient.requestWithGet("http://localhost:9500/hello");
-        System.out.println("response:" + response);
+//        System.out.println("response:" + response);
         execute(ctx, originRequest, response);
     }
 
 
     private static void execute(
             ChannelHandlerContext ctx, FullHttpRequest req, HttpResponse res) {
-        if (!HttpUtil.isKeepAlive(req)) {
+        if (HttpUtil.isKeepAlive(req)) {
             System.out.println("isKeepAlive###");
             res.addHeader("Connection", "keep-alive");
             ctx.write(res);
             ctx.flush();
         } else {
-            System.out.println("not keep alive ################");
-            ctx.write(res);
-            ctx.flush();
+//            System.out.println("not keep alive ################");
+//            ctx.write(res);
+//            ctx.flush();
             ctx.channel().writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
         }
     }
