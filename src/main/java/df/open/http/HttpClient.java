@@ -62,7 +62,7 @@ public class HttpClient {
         if (cm == null) {
             cm = new PoolingHttpClientConnectionManager();
             cm.setMaxTotal(5000);// 整个连接池最大连接数
-            cm.setDefaultMaxPerRoute(1000);// 每路由最大连接数，默认值是2
+            cm.setDefaultMaxPerRoute(2000);// 每路由最大连接数，默认值是2
 //            cm.setMaxPerRoute(new HttpRoute(new HttpHost("localhost", 9500)), 1000);
 
         }
@@ -75,7 +75,7 @@ public class HttpClient {
 //        cm.setDefaultSocketConfig(socketConfig);
 
         ConnectionConfig connectionConfig = ConnectionConfig.custom()
-                .setBufferSize(1000)
+                .setBufferSize(100000)
                 .build();
         cm.setDefaultConnectionConfig(connectionConfig);
 

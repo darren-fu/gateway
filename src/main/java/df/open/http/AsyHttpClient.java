@@ -1,5 +1,6 @@
 package df.open.http;
 
+import df.open.core.handler.CustomHttpHandler;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -21,17 +22,24 @@ import java.util.concurrent.atomic.LongAdder;
 public class AsyHttpClient {
 
     static AsyncHttpClient asyncHttpClient;
-    static int count = 0;
 
-    static LongAdder longAdder;
+    public static LongAdder totalAccessCount;
+    public static LongAdder count9500;
+    public static LongAdder time9500;
+    public  static LongAdder count9600;
+    public static LongAdder time9600;
 
 
     static {
-        longAdder = new LongAdder();
+        totalAccessCount = new LongAdder();
+        count9500 = new LongAdder();
+        time9500 = new LongAdder();
+        count9600 = new LongAdder();
+        time9600 = new LongAdder();
         DefaultAsyncHttpClientConfig configBuild = new DefaultAsyncHttpClientConfig.Builder()
                 .setConnectTimeout(5000)
-                .setRequestTimeout(2000)
-                .setReadTimeout(2000)
+//                .setRequestTimeout(2000)
+//                .setReadTimeout(2000)
 //                .setIoThreadsCount(2)
                 .build();
         asyncHttpClient = new DefaultAsyncHttpClient(configBuild);
@@ -39,21 +47,37 @@ public class AsyHttpClient {
     }
 
     public static void main(String[] args) {
-        System.out.println(AsyHttpClient.longAdder.longValue());
+        System.out.println(AsyHttpClient.totalAccessCount.longValue());
     }
 
     public static void request(ChannelHandlerContext ctx, FullHttpRequest req) {
         long start = System.currentTimeMillis();
         BoundRequestBuilder boundRequestBuilder;
-        Long count = longAdder.longValue();
-        longAdder.increment();
+//        Long count = totalAccessCount.longValue();
+        Long count = CustomHttpHandler.count;
+        if(count > 100000){
+            totalAccessCount.reset();
+            count9500.reset();
+            time9500.reset();
+            count9600.reset();
+            time9600.reset();
+        }
+//        totalAccessCount.increment();
+//        Long c9500 = count9500.longValue();
+//        Long c9600 = count9600.longValue();
+        //
+        int i = (int) (count % 3);
+        if (i == 0) {
+//            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9600/");
+            boundRequestBuilder = asyncHttpClient.prepareGet("http://192.168.1.1:9600/hello");
+//            count9600.increment();
+        } else if(i ==1){
+//            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/");
+            boundRequestBuilder = asyncHttpClient.prepareGet("http://192.168.1.1:9500/hello");
+//            count9500.increment();
 
-        //偶数
-        if ((count & 1) == 0) {
-            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9600/");
-        }else{
-            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/");
-
+        }else {
+            boundRequestBuilder = asyncHttpClient.prepareGet("http://192.168.1.1:9700/hello");
         }
 //        if (req.uri().contains("hello")) {
 //            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/hello");
@@ -70,13 +94,23 @@ public class AsyHttpClient {
                 // ...
                 long end = System.currentTimeMillis();
 //                System.out.println("asyncHttpClient response : " + response);
-
-                System.out.println(response.getUri() + " : async http end - now : " + (end - start) + " ms, count : " + count);
+                if (response.getUri().getPort() == 9500) {
+                    time9500.add(end - start);
+                } else {
+                    time9600.add(end - start);
+                }
+                System.out.println(response.getUri() + " : async http: " +
+                        (end - start) + " ms, tcount : "
+                        + count
+//                        + ";c95:" + c9500 + ";c96: " + c9600
+                         + ";5avg:" + (time9500.longValue() * 2/count)
+                         + ";6avg:" + (time9600.longValue() * 2/count)
+                );
                 response.getResponseBodyAsByteBuffer();
-
+                byte[] res = response.getResponseBodyAsBytes();
                 HttpResponse httpResponse = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
-                httpResponse.setEntity(new ByteArrayEntity(response.getResponseBodyAsBytes(), ContentType.create("text/html", Charset.defaultCharset())));
-                httpResponse.addHeader("Content-Length", "22");
+                httpResponse.setEntity(new ByteArrayEntity(res, ContentType.create("text/html", Charset.defaultCharset())));
+                httpResponse.addHeader("Content-Length", String.valueOf(res.length));
                 httpResponse.addHeader("Content-Type", "text/html; charset=utf-8");
 //                System.out.println("http response : " + httpResponse);
                 if (HttpUtil.isKeepAlive(req)) {

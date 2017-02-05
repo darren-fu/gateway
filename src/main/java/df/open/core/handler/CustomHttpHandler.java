@@ -29,7 +29,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 
     private String mac;
 
-    private static int count = 0;
+    public static Long count = 0L;
 
 
     @Override
@@ -47,7 +47,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 //            logger.error("protocolVersion: {}", httpRequest.protocolVersion());
             long now = System.currentTimeMillis();
 //            HttpTools.sendCorrectResp(ctx, httpRequest, "SSSSSSS");
-
+//
 //            ExecutorContext.execute(new Runnable() {
 //                @Override
 //                public void run() {
@@ -61,12 +61,12 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
 //
 //                }
 //            });
-
+            count++;
             AsyHttpClient.request(ctx, httpRequest);
 
 
             long end = System.currentTimeMillis();
-            System.out.println("end - now : " + (end - now) + " ms");
+//            System.out.println("end - now : " + (end - now) + " ms");
         } else if (msg instanceof WebSocketFrame) {//如果是Websocket请求，则进行websocket操作
             // handleWebSocketFrame(ctx, (WebSocketFrame) msg);
         }
@@ -78,7 +78,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
 
-        System.out.println("##channelReadComplete..." + count++ + ",ctx:" + ctx.hashCode());
+//        System.out.println("##channelReadComplete..." + count++ + ",ctx:" + ctx.hashCode());
         ctx.flush();
 //        ctx.close();
         //ctx.fireChannelReadComplete();
