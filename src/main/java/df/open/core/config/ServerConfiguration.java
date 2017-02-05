@@ -73,7 +73,8 @@ public class ServerConfiguration {
                                 .addLast("encoder", new HttpClientResponseEncoder<>())
                                 .addLast("base-encoder", new HttpResponseEncoder())
                                 .addLast(new ChunkedWriteHandler())
-                                .addLast(executor, "action-handler", customHttpHandler);
+//                                .addLast(executor, "action-handler", customHttpHandler);
+                                .addLast(executor, "action-handler", new CustomHttpHandler());
 
 //
 //                        ch.pipeline().addLast("decoder", new HttpRequestDecoder());
