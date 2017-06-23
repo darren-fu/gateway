@@ -1,17 +1,21 @@
 package df.open.http;
 
 import df.open.core.handler.CustomHttpHandler;
+import df.open.utils.HttpTools;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpUtil;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.asynchttpclient.*;
+import org.asynchttpclient.channel.ChannelPool;
 
 import java.nio.charset.Charset;
 import java.util.concurrent.atomic.LongAdder;
@@ -26,7 +30,7 @@ public class AsyHttpClient {
     public static LongAdder totalAccessCount;
     public static LongAdder count9500;
     public static LongAdder time9500;
-    public  static LongAdder count9600;
+    public static LongAdder count9600;
     public static LongAdder time9600;
 
 
@@ -38,6 +42,10 @@ public class AsyHttpClient {
         time9600 = new LongAdder();
         DefaultAsyncHttpClientConfig configBuild = new DefaultAsyncHttpClientConfig.Builder()
                 .setConnectTimeout(5000)
+                .setMaxConnectionsPerHost(100)
+                .setValidateResponseHeaders(false)
+//                .setChannelPool(ChannelPool)
+
 //                .setRequestTimeout(2000)
 //                .setReadTimeout(2000)
 //                .setIoThreadsCount(2)
@@ -46,16 +54,16 @@ public class AsyHttpClient {
         System.out.println(configBuild.getRequestTimeout());
     }
 
-    public static void main(String[] args) {
-        System.out.println(AsyHttpClient.totalAccessCount.longValue());
-    }
+//    public static void main(String[] args) {
+//        System.out.println(AsyHttpClient.totalAccessCount.longValue());
+//    }
 
     public static void request(ChannelHandlerContext ctx, FullHttpRequest req) {
         long start = System.currentTimeMillis();
         BoundRequestBuilder boundRequestBuilder;
 //        Long count = totalAccessCount.longValue();
         Long count = CustomHttpHandler.count;
-        if(count > 100000){
+        if (count > 100000) {
             totalAccessCount.reset();
             count9500.reset();
             time9500.reset();
@@ -69,15 +77,15 @@ public class AsyHttpClient {
         int i = (int) (count % 3);
         if (i == 0) {
 //            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9600/");
-            boundRequestBuilder = asyncHttpClient.prepareGet("http://192.168.1.1:9600/hello");
+            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/hello");
 //            count9600.increment();
-        } else if(i ==1){
+        } else if (i == 1) {
 //            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/");
-            boundRequestBuilder = asyncHttpClient.prepareGet("http://192.168.1.1:9500/hello");
+            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/hello");
 //            count9500.increment();
 
-        }else {
-            boundRequestBuilder = asyncHttpClient.prepareGet("http://192.168.1.1:9700/hello");
+        } else {
+            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/hello");
         }
 //        if (req.uri().contains("hello")) {
 //            boundRequestBuilder = asyncHttpClient.prepareGet("http://localhost:9500/hello");
@@ -86,12 +94,15 @@ public class AsyHttpClient {
 //        }
 
 //        Request finalRequest = boundRequestBuilder.build();
+        System.out.println("Call service from:" + Thread.currentThread().getName());
+        boundRequestBuilder.addHeader(HttpHeaders.Names.CONTENT_TYPE, HttpHeaders.Values.APPLICATION_JSON);
         boundRequestBuilder.execute(new AsyncCompletionHandler<Response>() {
 
             @Override
             public Response onCompleted(Response response) throws Exception {
                 // Do something with the Response
                 // ...
+                System.out.println("get response from:" + Thread.currentThread().getName());
                 long end = System.currentTimeMillis();
 //                System.out.println("asyncHttpClient response : " + response);
                 if (response.getUri().getPort() == 9500) {
@@ -100,11 +111,11 @@ public class AsyHttpClient {
                     time9600.add(end - start);
                 }
                 System.out.println(response.getUri() + " : async http: " +
-                        (end - start) + " ms, tcount : "
-                        + count
+                                (end - start) + " ms, tcount : "
+                                + count
 //                        + ";c95:" + c9500 + ";c96: " + c9600
-                         + ";5avg:" + (time9500.longValue() * 2/count)
-                         + ";6avg:" + (time9600.longValue() * 2/count)
+                                + ";5avg:" + (time9500.longValue() * 2 / count)
+                                + ";6avg:" + (time9600.longValue() * 2 / count)
                 );
                 response.getResponseBodyAsByteBuffer();
                 byte[] res = response.getResponseBodyAsBytes();
@@ -113,7 +124,7 @@ public class AsyHttpClient {
                 httpResponse.addHeader("Content-Length", String.valueOf(res.length));
                 httpResponse.addHeader("Content-Type", "text/html; charset=utf-8");
 //                System.out.println("http response : " + httpResponse);
-                if (HttpUtil.isKeepAlive(req)) {
+                if (HttpTools.isKeepAlive(req)) {
                     System.out.println("isKeepAlive###");
                     httpResponse.addHeader("Connection", "keep-alive");
                     ctx.write(httpResponse);
@@ -134,6 +145,9 @@ public class AsyHttpClient {
                 t.printStackTrace();
             }
         });
+
+//        Request request = new RequestBuilder()
+
     }
 
 

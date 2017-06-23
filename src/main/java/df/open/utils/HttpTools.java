@@ -7,7 +7,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -26,6 +25,19 @@ public class HttpTools {
      * <p>
      * sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, FORBIDDEN));
      */
+    public static boolean isKeepAlive(HttpMessage message) {
+        String connection = message.headers().get(HttpHeaders.Names.CONNECTION);
+        if (connection != null && HttpHeaders.Values.CLOSE.equalsIgnoreCase(connection)) {
+            return false;
+        }
+
+        if (message.getProtocolVersion().isKeepAliveDefault()) {
+            return !HttpHeaders.Values.CLOSE.equalsIgnoreCase(connection);
+        } else {
+            return HttpHeaders.Values.KEEP_ALIVE.equalsIgnoreCase(connection);
+        }
+    }
+
     public static void sendCorrectResp(
             ChannelHandlerContext ctx, FullHttpRequest req, Object obj) {
         ByteBuf content = Convert.Obj2Buf(obj);
@@ -34,17 +46,20 @@ public class HttpTools {
         }
         FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
 //        res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
-        HttpUtil.setContentLength(res, content.readableBytes());
+        setContentLength(res, content.readableBytes());
         //System.out.println("###################");
         //System.out.println(res);
         execute(ctx, req, res);
     }
+    public static void setContentLength(HttpMessage message, long length) {
+        message.headers().set(HttpHeaders.Names.CONTENT_LENGTH, length);
+    }
 
     public static void sendWrongResp(
             ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
-        ByteBuf buf = Unpooled.copiedBuffer(res.status().toString(), CharsetUtil.UTF_8);
+        ByteBuf buf = Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8);
         res.content().writeBytes(buf);
-        HttpUtil.setContentLength(res, res.content().readableBytes());
+        setContentLength(res, res.content().readableBytes());
         execute(ctx, req, res);
         buf.release();
     }
@@ -77,10 +92,10 @@ public class HttpTools {
 
     private static void execute(
             ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
-        if (HttpUtil.isKeepAlive(req)) {
+        if (isKeepAlive(req)) {
             System.out.println("is keep alive ############");
 
-            res.headers().set(CONNECTION, KEEP_ALIVE);
+            res.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
             ctx.write(res);
             ctx.close();
         } else {

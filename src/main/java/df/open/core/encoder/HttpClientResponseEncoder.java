@@ -1,12 +1,9 @@
 package df.open.core.encoder;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import io.netty.util.AsciiString;
 import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 
@@ -14,7 +11,6 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpConstants.CR;
 import static io.netty.handler.codec.http.HttpConstants.LF;
-import static io.netty.util.AsciiString.c2b;
 
 /**
  * 说明:
@@ -100,20 +96,24 @@ public class HttpClientResponseEncoder<R extends HttpResponse> extends MessageTo
         }
 
         private static void writeAscii(ByteBuf buf, int offset, CharSequence value, int valueLen) {
-            if (value instanceof AsciiString) {
-                ByteBufUtil.copy((AsciiString) value, 0, buf, offset, valueLen);
-            } else {
+//            if (value instanceof AsciiString) {
+//                ByteBufUtil.copy((AsciiString) value, 0, buf, offset, valueLen);
+//            } else {
                 writeCharSequence(buf, offset, value, valueLen);
-            }
+//            }
         }
 
         private static void writeCharSequence(ByteBuf buf, int offset, CharSequence value, int valueLen) {
             for (int i = 0; i < valueLen; ++i) {
                 buf.setByte(offset ++, c2b(value.charAt(i)));
+//                buf.writeBytes(value.,offset, valueLen);
             }
         }
     }
 
+    public static byte c2b(char c) {
+        return (byte)(c > 255?63:c);
+    }
 
 
 

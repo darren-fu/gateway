@@ -1,22 +1,20 @@
 package df.open.core.handler;
 
 import df.open.core.NettyServer;
-import df.open.core.executor.ExecutorContext;
-import df.open.core.remote.Requester;
 import df.open.http.AsyHttpClient;
 import df.open.utils.HttpTools;
-import df.open.utils.RespTools;
 import df.open.utils.StringTools;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.websocketx.*;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
 /**
  * The type Http handler.
@@ -93,7 +91,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     private static String getWebSocketLocation(FullHttpRequest req) {
-        String location = req.headers().get(HOST) + "/ws/join";
+        String location = req.headers().get(HttpHeaders.Names.HOST) + "/ws/join";
         logger.info(location);
         if (NettyServer.SSL) {
             return "wss://" + location;
@@ -103,7 +101,7 @@ public class CustomHttpHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     private String wsBeforeHandler(ChannelHandlerContext ctx, FullHttpRequest req) {
-        String mac = StringTools.getMac(req.uri());
+        String mac = StringTools.getMac(req.getUri());
         if (mac == null) {
             HttpTools.sendCorrectResp(ctx, req, "PARAERROR");
             return null;

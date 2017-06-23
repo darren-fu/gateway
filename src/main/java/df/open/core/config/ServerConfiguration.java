@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.util.concurrent.DefaultEventExecutor;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -59,8 +59,8 @@ public class ServerConfiguration {
     public ServerBootstrap serverBootstrap() {
         ServerBootstrap b = new ServerBootstrap();
 
-        EventExecutor executor = new DefaultEventExecutor();
-
+//        EventExecutor executor = new DefaultEventExecutor();
+        DefaultEventExecutorGroup eventExecutors = new DefaultEventExecutorGroup(3);
         b.group(bossGroup(), workerGroup())
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -74,7 +74,7 @@ public class ServerConfiguration {
                                 .addLast("base-encoder", new HttpResponseEncoder())
                                 .addLast(new ChunkedWriteHandler())
 //                                .addLast(executor, "action-handler", customHttpHandler);
-                                .addLast(executor, "action-handler", new CustomHttpHandler());
+                                .addLast(eventExecutors, "action-handler", new CustomHttpHandler());
 
 //
 //                        ch.pipeline().addLast("decoder", new HttpRequestDecoder());

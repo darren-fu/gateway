@@ -1,6 +1,7 @@
 package df.open.core.remote;
 
 import df.open.http.HttpClient;
+import df.open.utils.HttpTools;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -33,7 +34,7 @@ public class Requester {
 
     private static void execute(
             ChannelHandlerContext ctx, FullHttpRequest req, HttpResponse res) {
-        if (HttpUtil.isKeepAlive(req)) {
+        if (HttpTools.isKeepAlive(req)) {
             System.out.println("isKeepAlive###");
             res.addHeader("Connection", "keep-alive");
             ctx.write(res);
